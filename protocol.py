@@ -6,21 +6,17 @@ def encode_tcp_ident(name: str, tcp_port: int) -> bytes:
     payload = f"IDENT|{name}|{tcp_port}|"
     return payload.encode("utf-8")
 
-
 def encode_tcp_msg(text: str) -> bytes:
     text_bytes = text.encode("utf-8")
     header = f"MSG|{len(text_bytes)}|".encode("utf-8")
     return header + text_bytes
 
-
 def encode_tcp_file_header(filename: str, size_in_bytes: int) -> bytes:
     payload = f"FILE|{filename}|{size_in_bytes}|"
     return payload.encode("utf-8")
 
-
 def encode_tcp_bye() -> bytes:
     return "BYE|".encode("utf-8")
-
 
 def parse_udp_hello(datagram_bytes: bytes):
     try:

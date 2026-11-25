@@ -2,22 +2,11 @@ import socket
 import shared_state
 import threading
 import protocol
+import tcp_file_transfer
 
 # Reading and Extracting bytes received from socket
 def bytes_extract(sock: socket.socket, number_of_bytes: int) -> bytes:
-    # Initialize an bytes array
-    chunks = bytearray()
-
-    # Receive bytes segment
-    while len(chunks) < number_of_bytes:
-        chunk = sock.recv(number_of_bytes - len(chunks))
-        # When connection with sender is disrupted while reading
-        if not chunk:
-            raise ConnectionError("Socket closed prematurely while reading payload.")
-        # Adding byte chunk of each segment into the list then return the list as bytes type
-        chunks.extend(chunk)
-    
-    return bytes(chunks)
+    return tcp_file_transfer.recv_exact(sock, number_of_bytes)
 
 
 
@@ -89,9 +78,7 @@ def peer_listener(sock: socket.socket, known_peer_name: str):
                 filename = header_reader(sock)
                 size_in_bytes = int(header_reader(sock))
                 sender = peer_name or "Unknown"
-                file_data = bytes_extract(sock, size_in_bytes)
-
-                # Handling file transfer here
+                tcp_file_transfer.receive_file(sock, filename, size_in_bytes, sender)
 
 
             elif cmd == "BYE":

@@ -1,4 +1,4 @@
-def encode_udp_hello(name: str, tcp_port: int, status: str = "ONLINE") -> bytes:
+def encode_udp_hello(name: str, tcp_port: int, status: str = "online") -> bytes:
     payload = f"HELLO|{name}|{tcp_port}|{status}"
     return payload.encode("utf-8")
 

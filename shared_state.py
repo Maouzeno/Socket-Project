@@ -6,7 +6,7 @@ state_lock = threading.Lock()
 my_info = {
     "name": "",
     "tcp_port": 0,
-    "status": "ONLINE"
+    "status": "online"
 }
 
 # struture: { "peer_name": {"ip": str, "port": int, "status": str, "last_seen": float} }

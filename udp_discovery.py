@@ -35,7 +35,7 @@ def create_udp_socket(port=UDP_PORT):
 # A1. UDP BROADCASTER
 
 
-def udp_broadcaster_loop(sock, stop_event=None):
+def udp_broadcaster_loop(sock, stop_event=None, udp_port=UDP_PORT, broadcast_address=BROADCAST_ADDRESS):
     """
     Broadcast device presence every 3 seconds.
     """
@@ -59,7 +59,7 @@ def udp_broadcaster_loop(sock, stop_event=None):
             # Send broadcast
             sock.sendto(
                 data,
-                (BROADCAST_ADDRESS, UDP_PORT)
+                (broadcast_address, udp_port)
             )
 
         except OSError as error:
@@ -94,9 +94,10 @@ def udp_listener_loop(sock, print_callback=print, stop_event=None):
             if result is not None:
 
                 name, tcp_port, status = result
+                status = status.lower()
 
                 # Validate status
-                if status not in ("ONLINE", "AWAY"):
+                if status not in ("online", "away"):
                     result = None
 
                 else:
@@ -220,7 +221,7 @@ def get_formatted_online_list():
 
 # A4. CHANGE STATUS
 
-def change_status(new_status, sock):
+def change_status(new_status, sock, udp_port=UDP_PORT, broadcast_address=BROADCAST_ADDRESS):
 
     new_status = new_status.upper()
 
@@ -247,7 +248,7 @@ def change_status(new_status, sock):
         # Broadcast immediately
         sock.sendto(
             data,
-            (BROADCAST_ADDRESS, UDP_PORT)
+            (broadcast_address, udp_port)
         )
 
         print(f"[Status] Your status is now {new_status}")

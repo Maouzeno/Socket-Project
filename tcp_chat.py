@@ -80,6 +80,11 @@ def peer_listener(sock: socket.socket, known_peer_name: str):
                 sender = peer_name or "Unknown"
                 tcp_file_transfer.receive_file(sock, filename, size_in_bytes, sender)
 
+            # TCP file indentification ("FILE_INDENT|<name>")
+            elif cmd == "FILE_IDENT":
+                sender_name = header_reader(sock)
+                peer_name = sender_name
+
 
             elif cmd == "BYE":
                 if peer_name:
@@ -109,17 +114,17 @@ def tcp_acceptor():
         # Accepting maximum 5 incoming connections in the queue
         server_socket.listen(5)
 
-        while True:
-            try:
-                # Accepting a new connection
-                client_socket, addr = server_socket.accept()
-                print(f"[INFO]: Connection established with {addr}")
+    while True:
+        try:
+            # Accepting a new connection
+            client_socket, addr = server_socket.accept()
+            print(f"[INFO]: Connection established with {addr}")
 
-                # Start a new thread to handle the incoming connection
-                listener_thread = threading.Thread(target=peer_listener, args=(client_socket, None), daemon=True)
-                listener_thread.start()
-            except OSError:
-                break
+            # Start a new thread to handle the incoming connection
+            listener_thread = threading.Thread(target=peer_listener, args=(client_socket, None), daemon=True)
+            listener_thread.start()
+        except OSError:
+            break
 
 
 
@@ -134,26 +139,40 @@ def connect_to_peer(peer_name: str) -> bool:
         my_name = shared_state.my_info["name"]
         my_port = shared_state.my_info["tcp_port"]
     
-    # If the peer is not found in the online users list, they are offline
-    if not peer_info:
-        print(f"[ERROR]: User '{peer_name}' is not online.")
-        return False
-
     # Attempting to establish a TCP connection with the peer
+    if not peer_info:
+        print(f"[ERROR]: {peer_name} is not online")
+        return False
+    sock = None
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5.0)
         sock.connect((peer_info["ip"], peer_info["port"]))
         sock.sendall(protocol.encode_tcp_ident(my_name, my_port))
+        sock.settimeout(None)  # Reset to blocking for peer_listener
 
-        # If the connection is successful, add the socket to the active connections dictionary
+        # Check again inside the lock in case another thread/IDENT connected first
+        already_connected = False
         with shared_state.state_lock:
-            shared_state.active_connections[peer_name] = sock
+            if peer_name in shared_state.active_connections:
+                already_connected = True
+            else:
+                shared_state.active_connections[peer_name] = sock
+
+        if already_connected:
+            sock.close()
+            return True
 
         # Start a new thread to listen for incoming messages from the peer
         listener_thread = threading.Thread(target=peer_listener, args=(sock, peer_name), daemon=True)
         listener_thread.start()
         return True
     except OSError:
+        if sock is not None:
+            try:
+                sock.close()
+            except OSError:
+                pass
         print(f"[ERROR]: Could not connect to {peer_name}.")
         return False
 

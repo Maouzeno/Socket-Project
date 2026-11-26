@@ -8,7 +8,7 @@ import protocol
 
 
 # CONFIGURATION
-from config import (
+from UDP.config import (
     UDP_PORT,
     TCP_PORT,
     BROADCAST_INTERVAL,

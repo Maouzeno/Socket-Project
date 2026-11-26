@@ -1,9 +1,13 @@
 def encode_udp_hello(name: str, tcp_port: int, status: str = "online") -> bytes:
-    payload = f"HELLO|{name}|{tcp_port}|{status}"
+    payload = f"HELLO|{name.replace("|", "_")}|{tcp_port}|{status}"
     return payload.encode("utf-8")
 
 def encode_tcp_ident(name: str, tcp_port: int) -> bytes:
-    payload = f"IDENT|{name}|{tcp_port}|"
+    payload = f"IDENT|{name.replace("|", "_")}|{tcp_port}|"
+    return payload.encode("utf-8")
+
+def encode_tcp_file_ident(name: str) -> bytes:
+    payload = f"FILE_IDENT|{name.replace("|", "_")}|"
     return payload.encode("utf-8")
 
 def encode_tcp_msg(text: str) -> bytes:
@@ -12,7 +16,7 @@ def encode_tcp_msg(text: str) -> bytes:
     return header + text_bytes
 
 def encode_tcp_file_header(filename: str, size_in_bytes: int) -> bytes:
-    payload = f"FILE|{filename}|{size_in_bytes}|"
+    payload = f"FILE|{filename.replace("|", "_")}|{size_in_bytes}|"
     return payload.encode("utf-8")
 
 def encode_tcp_bye() -> bytes:
